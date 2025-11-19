@@ -3,7 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Video</title>
-
 <style>
 html,body{
     margin:0;
@@ -41,15 +40,17 @@ video{
 }
 </style>
 </head>
-
 <body>
 
+<!-- AUDIO HAL 1 -->
 <audio id="bgm" src="audio.mp3" preload="auto"></audio>
 
+<!-- VIDEO -->
 <video id="vid" controls playsinline poster="poster.png">
     <source src="video.mp4" type="video/mp4">
 </video>
 
+<!-- GAMBAR HALAMAN -->
 <section class="scroll-section" id="hal1">
     <img src="hal1.png" class="scroll-img">
 </section>
@@ -64,7 +65,7 @@ video{
 </section>
 
 <script>
-/* Fade-in gambar */
+/* ===== FADE-IN GAMBAR ===== */
 const imgs = document.querySelectorAll(".scroll-img");
 const observer = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
@@ -73,22 +74,19 @@ const observer = new IntersectionObserver(entries=>{
 },{ threshold: 0.2 });
 imgs.forEach(img => observer.observe(img));
 
-/* Sistem Audio */
+/* ===== AUDIO HAL 1 ===== */
 const bgm = document.getElementById("bgm");
 const vid = document.getElementById("vid");
 let audioUnlocked = false;
 
-vid.addEventListener("play", () => {
-    if (!audioUnlocked) {
-        bgm.play().then(()=>{
-            bgm.pause();
-            audioUnlocked = true;
-        }).catch(()=>{});
+// Unlock audio via user gesture (tap play video)
+vid.addEventListener("play", ()=>{
+    if(!audioUnlocked){
+        bgm.play().then(()=>{ bgm.pause(); audioUnlocked=true; }).catch(()=>{});
     }
 });
 
 const hal1 = document.getElementById("hal1");
-
 const startMusicObserver = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
         if(entry.isIntersecting && audioUnlocked){
@@ -96,32 +94,37 @@ const startMusicObserver = new IntersectionObserver(entries=>{
         }
     });
 },{ threshold: 0.4 });
-
 startMusicObserver.observe(hal1);
 
+// Pause audio saat user keluar tab
 document.addEventListener("visibilitychange", ()=>{
     if(document.hidden){
         bgm.pause();
-    } else {
-        if(audioUnlocked){
-            bgm.play().catch(()=>{});
-        }
+    } else if(audioUnlocked){
+        bgm.play().catch(()=>{});
     }
 });
 
-/* =====================================================
-   VIDEO AUTO-PAUSE kalau video keluar 1–5%
-===================================================== */
-const videoAutoPause = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if (!entry.isIntersecting) {
-            if (!vid.paused) vid.pause();
+/* ===== VIDEO AUTO-PAUSE SAAT SCROLL 5px ===== */
+let initialVideoScroll = 0;
+let videoScrollStarted = false;
+
+// Catat posisi scroll saat video mulai play
+vid.addEventListener("play", ()=>{
+    initialVideoScroll = window.scrollY;
+    videoScrollStarted = true;
+});
+
+// Deteksi scroll untuk auto-pause
+window.addEventListener("scroll", ()=>{
+    if(videoScrollStarted && !vid.paused){
+        let scrolled = Math.abs(window.scrollY - initialVideoScroll);
+        if(scrolled >= 5){ // scroll 5px sudah pause
+            vid.pause();
+            videoScrollStarted = false; // jangan pause berkali-kali
         }
-    });
-}, { threshold: 0.95 });
-
-videoAutoPause.observe(vid);
-
+    }
+});
 </script>
 
 </body>
