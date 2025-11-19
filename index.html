@@ -13,14 +13,12 @@ html,body{
     scroll-behavior: smooth;
 }
 
-/* VIDEO TIDAK DIUBAH */
 video{
     width:100vw;
     height:100vh;
     object-fit:cover;
 }
 
-/* ====== BAGIAN EFEK GAMBAR ====== */
 .scroll-section{
     width:100vw;
     height:100vh;
@@ -46,15 +44,12 @@ video{
 
 <body>
 
-<!-- ====== AUDIO ====== -->
 <audio id="bgm" src="audio.mp3" preload="auto"></audio>
 
-<!-- ====== VIDEO ====== -->
 <video id="vid" controls playsinline poster="poster.png">
     <source src="video.mp4" type="video/mp4">
 </video>
 
-<!-- ====== GAMBAR ====== -->
 <section class="scroll-section" id="hal1">
     <img src="hal1.png" class="scroll-img">
 </section>
@@ -68,9 +63,8 @@ video{
     <img src="hal4.png" class="scroll-img">
 </section>
 
-<!-- ====== SCRIPT ====== -->
 <script>
-/* ========== ANIMASI FADE IN GAMBAR ========== */
+/* Fade-in gambar */
 const imgs = document.querySelectorAll(".scroll-img");
 const observer = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
@@ -79,16 +73,11 @@ const observer = new IntersectionObserver(entries=>{
 },{ threshold: 0.2 });
 imgs.forEach(img => observer.observe(img));
 
-
-/* =====================================================
-   SISTEM AUDIO
-===================================================== */
-
+/* Sistem Audio */
 const bgm = document.getElementById("bgm");
 const vid = document.getElementById("vid");
 let audioUnlocked = false;
 
-/* === STEP 1 — UNLOCK AUDIO === */
 vid.addEventListener("play", () => {
     if (!audioUnlocked) {
         bgm.play().then(()=>{
@@ -98,8 +87,6 @@ vid.addEventListener("play", () => {
     }
 });
 
-
-/* === STEP 2 — PLAY AUDIO saat HAL 1 terlihat === */
 const hal1 = document.getElementById("hal1");
 
 const startMusicObserver = new IntersectionObserver(entries=>{
@@ -112,8 +99,6 @@ const startMusicObserver = new IntersectionObserver(entries=>{
 
 startMusicObserver.observe(hal1);
 
-
-/* === STEP 3 — AUTO PAUSE jika keluar aplikasi === */
 document.addEventListener("visibilitychange", ()=>{
     if(document.hidden){
         bgm.pause();
@@ -124,26 +109,19 @@ document.addEventListener("visibilitychange", ()=>{
     }
 });
 
-
 /* =====================================================
-   FITUR BARU:
-   VIDEO AUTO-PAUSE BEGITU DI-SCROLL SEDIKIT
+   VIDEO AUTO-PAUSE kalau video keluar 1–5%
 ===================================================== */
+const videoAutoPause = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (!entry.isIntersecting) {
+            if (!vid.paused) vid.pause();
+        }
+    });
+}, { threshold: 0.95 });
 
-let scrollPauseEnabled = false;
+videoAutoPause.observe(vid);
 
-// Aktifkan fitur setelah video diputar
-vid.addEventListener("play", () => {
-    scrollPauseEnabled = true;
-});
-
-// Deteksi scroll
-window.addEventListener("scroll", () => {
-    if (scrollPauseEnabled && !vid.paused) {
-        vid.pause();
-        scrollPauseEnabled = false;  // supaya tidak terus pause berkali-kali
-    }
-});
 </script>
 
 </body>
