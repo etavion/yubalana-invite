@@ -22,10 +22,10 @@
 
   /* ====== BAGIAN EFEK GAMBAR ====== */
   .scroll-section{
-  width:100vw;
-  height:100vh;
-  overflow:hidden;
-  background:white;   /* ubah warna hitam saat transisi */
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+    background:white;
   }
 
   .scroll-img{
@@ -46,14 +46,16 @@
 
 <body>
 
+<!-- ====== AUDIO (TAMBAHAN) ====== -->
+<audio id="bgm" src="audio.mp3" preload="auto"></audio>
+
 <!-- ====== VIDEO TETAP SAMA ====== -->
 <video controls playsinline poster="poster.png">
-
   <source src="video.mp4" type="video/mp4">
 </video>
 
-<!-- ====== 4 GAMBAR HALAMAN (INI YANG BARU) ====== -->
-<section class="scroll-section">
+<!-- ====== 4 GAMBAR HALAMAN ====== -->
+<section class="scroll-section" id="hal1">
   <img src="hal1.png" class="scroll-img">
 </section>
 
@@ -82,7 +84,26 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.2 });
 
 imgs.forEach(img => observer.observe(img));
-</script>
 
-</body>
-</html>
+
+/* ====== AUDIO PLAY SAAT MASUK HALAMAN 1 ====== */
+const bgm = document.getElementById("bgm");
+let audioStarted = false;
+
+const audioTrigger = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !audioStarted) {
+      bgm.play().catch(()=>{});  // mulai musik
+      audioStarted = true;
+    }
+  });
+}, { threshold: 0.4 });
+
+audioTrigger.observe(document.getElementById("hal1"));
+
+/* ====== STOP MUSIK SAAT TAB DITINGGALKAN ====== */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    bgm.pause();
+  } else {
+    if (audioStarted) bgm.play().
