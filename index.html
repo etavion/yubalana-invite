@@ -46,15 +46,15 @@
 
 <body>
 
-<!-- ====== AUDIO (TAMBAHAN) ====== -->
+<!-- ====== AUDIO ====== -->
 <audio id="bgm" src="audio.mp3" preload="auto"></audio>
 
 <!-- ====== VIDEO TETAP SAMA ====== -->
-<video controls playsinline poster="poster.png">
+<video id="vid" controls playsinline poster="poster.png">
   <source src="video.mp4" type="video/mp4">
 </video>
 
-<!-- ====== 4 GAMBAR HALAMAN ====== -->
+<!-- ====== GAMBAR ====== -->
 <section class="scroll-section" id="hal1">
   <img src="hal1.png" class="scroll-img">
 </section>
@@ -71,39 +71,71 @@
   <img src="hal4.png" class="scroll-img">
 </section>
 
-<!-- ====== SCRIPT ANIMASI FADE-IN ====== -->
-<script>
-const imgs = document.querySelectorAll(".scroll-img");
 
+<!-- ====== SCRIPT ====== -->
+<script>
+/* ========== ANIMASI FADE IN GAMBAR ========== */
+const imgs = document.querySelectorAll(".scroll-img");
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add("show");
-    }
+    if (entry.isIntersecting) entry.target.classList.add("show");
   });
 }, { threshold: 0.2 });
 
 imgs.forEach(img => observer.observe(img));
 
 
-/* ====== AUDIO PLAY SAAT MASUK HALAMAN 1 ====== */
-const bgm = document.getElementById("bgm");
-let audioStarted = false;
+/* =====================================================
+      SCRIPT AUDIO FIX — SESUAI PERMINTAAN
+   ===================================================== */
 
-const audioTrigger = new IntersectionObserver(entries => {
+const bgm = document.getElementById("bgm");
+const vid = document.getElementById("vid");
+
+let audioUnlocked = false;
+
+/* 
+  === CARA KERJA ===
+  - User tap video → dianggap sebagai gesture user
+  - Browser langsung “unlock audio”
+  - Musik TIDAK langsung nyala
+  - Musik baru NYALA saat masuk HAL 1
+*/
+
+/* STEP 1: UNLOCK AUDIO saat PLAY video: */
+vid.addEventListener("play", function(){
+  if (!audioUnlocked) {
+    bgm.play().then(()=>{
+      bgm.pause(); // unlock saja, belum mulai musik
+      audioUnlocked = true;
+    }).catch(()=>{});
+  }
+});
+
+
+/* STEP 2: MULAI MUSIK saat masuk HALAMAN 1 */
+const hal1 = document.getElementById("hal1");
+
+const startMusicObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
-    if (entry.isIntersecting && !audioStarted) {
-      bgm.play().catch(()=>{});  // mulai musik
-      audioStarted = true;
+    if (entry.isIntersecting && audioUnlocked) {
+      bgm.play().catch(()=>{});
     }
   });
 }, { threshold: 0.4 });
 
-audioTrigger.observe(document.getElementById("hal1"));
+startMusicObserver.observe(hal1);
 
-/* ====== STOP MUSIK SAAT TAB DITINGGALKAN ====== */
+
+/* STEP 3: PAUSE MUSIK saat user keluar aplikasi */
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     bgm.pause();
   } else {
-    if (audioStarted) bgm.play().
+    if (audioUnlocked) bgm.play().catch(()=>{});
+  }
+});
+</script>
+
+</body>
+</html>
