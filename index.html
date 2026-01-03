@@ -46,14 +46,13 @@ video{
 <body>
 
 <!-- AUDIO -->
-<audio id="bgm" src="audio.mp3" preload="auto"></audio>
+<audio id="bgm" src="audio.mp3" preload="auto" loop></audio>
 
 <!-- VIDEO -->
 <video id="vid" controls playsinline poster="poster.png">
     <source src="video.mp4" type="video/mp4">
 </video>
 
-<!-- HALAMAN -->
 <section class="scroll-section" id="hal1">
     <img src="hal1.png" class="scroll-img">
 </section>
@@ -70,7 +69,6 @@ video{
     <img src="hal4.png" class="scroll-img">
 </section>
 
-<!-- HAL 5 MAPS -->
 <section class="scroll-section">
     <img src="hal5.png" class="scroll-img" style="opacity:1;">
 
@@ -81,7 +79,6 @@ video{
        style="position:absolute; top:65%; left:20%; width:60%; height:10%; z-index:10;"></a>
 </section>
 
-<!-- HAL 6 REKENING -->
 <section class="scroll-section">
     <img src="hal6.png" class="scroll-img" style="opacity:1;">
 
@@ -100,7 +97,7 @@ video{
 </section>
 
 <script>
-/* ===== FADE-IN GAMBAR ===== */
+/* ===== FADE IN GAMBAR ===== */
 const imgs = document.querySelectorAll(".scroll-img");
 const observer = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
@@ -108,17 +105,16 @@ const observer = new IntersectionObserver(entries=>{
             entry.target.classList.add("show");
         }
     });
-},{ threshold:0.2 });
+},{threshold:0.2});
 imgs.forEach(img=>observer.observe(img));
 
-/* ===== AUDIO VS VIDEO (FINAL) ===== */
+/* ===== AUDIO MASTER LOGIC ===== */
 const bgm = document.getElementById("bgm");
 const vid = document.getElementById("vid");
 
-bgm.loop = true;
 let audioUnlocked = false;
 
-/* Unlock audio via video (sekali saja) */
+/* UNLOCK AUDIO (sekali saja, via play video) */
 vid.addEventListener("play", ()=>{
     if(!audioUnlocked){
         bgm.play().then(()=>{
@@ -127,32 +123,28 @@ vid.addEventListener("play", ()=>{
         }).catch(()=>{});
     }
 
-    // Video play → audio mati
+    // Video ON → audio OFF
     bgm.pause();
 });
 
-/* Video pause → audio nyala */
-vid.addEventListener("pause", ()=>{
-    if(audioUnlocked){
+/* VIDEO PAUSE / STOP → AUDIO HARUS NYALA */
+function playAudioIfAllowed(){
+    if(audioUnlocked && vid.paused){
         bgm.play().catch(()=>{});
     }
-});
+}
 
-/* Video selesai → audio nyala */
-vid.addEventListener("ended", ()=>{
-    if(audioUnlocked){
-        bgm.play().catch(()=>{});
-    }
-});
+vid.addEventListener("pause", playAudioIfAllowed);
+vid.addEventListener("ended", playAudioIfAllowed);
 
-/* Scroll bebas → audio tetap nyala (jika video tidak play) */
-window.addEventListener("scroll", ()=>{
+/* SAFETY LOOP (anti browser auto-pause) */
+setInterval(()=>{
     if(audioUnlocked && vid.paused && bgm.paused){
         bgm.play().catch(()=>{});
     }
-});
+}, 1000);
 
-/* Keluar website / tab mati */
+/* KELUAR WEBSITE → AUDIO MATI */
 document.addEventListener("visibilitychange", ()=>{
     if(document.hidden){
         bgm.pause();
@@ -161,7 +153,7 @@ document.addEventListener("visibilitychange", ()=>{
 window.addEventListener("pagehide", ()=>bgm.pause());
 window.addEventListener("beforeunload", ()=>bgm.pause());
 
-/* ===== VIDEO AUTO-PAUSE (TETAP) ===== */
+/* ===== VIDEO AUTO PAUSE (TETAP) ===== */
 let initialVideoScroll = 0;
 let videoScrollStarted = false;
 
@@ -179,7 +171,7 @@ window.addEventListener("scroll", ()=>{
     }
 });
 
-/* ===== COPY TEXT ===== */
+/* ===== COPY ===== */
 function copyText(nomor){
     navigator.clipboard.writeText(nomor);
     alert("Nomor berhasil disalin ✅");
