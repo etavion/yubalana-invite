@@ -3,13 +3,14 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Video</title>
+
 <style>
 html,body{
     margin:0;
     padding:0;
     background:white;
     height:100%;
-    scroll-behavior: smooth;
+    scroll-behavior:smooth;
 }
 
 video{
@@ -23,7 +24,7 @@ video{
     height:100vh;
     overflow:hidden;
     background:white;
-    position:relative;   /* ✅ WAJIB supaya scroll tidak berhenti */
+    position:relative;
 }
 
 .scroll-img{
@@ -41,9 +42,10 @@ video{
 }
 </style>
 </head>
+
 <body>
 
-<!-- AUDIO HAL 1 -->
+<!-- AUDIO -->
 <audio id="bgm" src="audio.mp3" preload="auto"></audio>
 
 <!-- VIDEO -->
@@ -51,7 +53,7 @@ video{
     <source src="video.mp4" type="video/mp4">
 </video>
 
-<!-- GAMBAR HALAMAN -->
+<!-- HALAMAN -->
 <section class="scroll-section" id="hal1">
     <img src="hal1.png" class="scroll-img">
 </section>
@@ -68,37 +70,31 @@ video{
     <img src="hal4.png" class="scroll-img">
 </section>
 
-<!-- ✅ HAL 5 (MAPS) -->
+<!-- HAL 5 MAPS -->
 <section class="scroll-section">
     <img src="hal5.png" class="scroll-img" style="opacity:1;">
 
-    <!-- Area klik peta -->
     <a href="https://maps.app.goo.gl/vQshAaQYVgwTqB1Q9?g_st=ac" target="_blank"
        style="position:absolute; top:35%; left:10%; width:80%; height:25%; z-index:10;"></a>
 
-    <!-- Area klik tombol merah -->
     <a href="https://maps.app.goo.gl/vQshAaQYVgwTqB1Q9?g_st=ac" target="_blank"
        style="position:absolute; top:65%; left:20%; width:60%; height:10%; z-index:10;"></a>
 </section>
 
-<!-- ✅ HAL 6 (REKENING - AUTO COPY) -->
+<!-- HAL 6 REKENING -->
 <section class="scroll-section">
     <img src="hal6.png" class="scroll-img" style="opacity:1;">
 
-    <!-- BNI -->
     <div onclick="copyText('1785665908')"
          style="position:absolute; top:33%; left:20%; width:60%; height:10%; z-index:10; cursor:pointer;"></div>
 
-    <!-- ShopeePay -->
     <div onclick="copyText('087758135608')"
          style="position:absolute; top:50%; left:20%; width:60%; height:10%; z-index:10; cursor:pointer;"></div>
 
-    <!-- SeaBank -->
     <div onclick="copyText('901337136988')"
          style="position:absolute; top:67%; left:20%; width:60%; height:10%; z-index:10; cursor:pointer;"></div>
 </section>
 
-<!-- ✅ HAL 7 -->
 <section class="scroll-section">
     <img src="hal7.png" class="scroll-img">
 </section>
@@ -108,41 +104,64 @@ video{
 const imgs = document.querySelectorAll(".scroll-img");
 const observer = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
-        if(entry.isIntersecting) entry.target.classList.add("show");
-    });
-},{ threshold: 0.2 });
-imgs.forEach(img => observer.observe(img));
-
-/* ===== AUDIO HAL 1 ===== */
-const bgm = document.getElementById("bgm");
-const vid = document.getElementById("vid");
-let audioUnlocked = false;
-
-vid.addEventListener("play", ()=>{
-    if(!audioUnlocked){
-        bgm.play().then(()=>{ bgm.pause(); audioUnlocked=true; }).catch(()=>{});
-    }
-});
-
-const hal1 = document.getElementById("hal1");
-const startMusicObserver = new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-        if(entry.isIntersecting && audioUnlocked){
-            bgm.play().catch(()=>{});
+        if(entry.isIntersecting){
+            entry.target.classList.add("show");
         }
     });
-},{ threshold: 0.4 });
-startMusicObserver.observe(hal1);
+},{ threshold:0.2 });
+imgs.forEach(img=>observer.observe(img));
 
-document.addEventListener("visibilitychange", ()=>{
-    if(document.hidden){
-        bgm.pause();
-    } else if(audioUnlocked){
+/* ===== AUDIO VS VIDEO (FINAL) ===== */
+const bgm = document.getElementById("bgm");
+const vid = document.getElementById("vid");
+
+bgm.loop = true;
+let audioUnlocked = false;
+
+/* Unlock audio via video (sekali saja) */
+vid.addEventListener("play", ()=>{
+    if(!audioUnlocked){
+        bgm.play().then(()=>{
+            bgm.pause();
+            audioUnlocked = true;
+        }).catch(()=>{});
+    }
+
+    // Video play → audio mati
+    bgm.pause();
+});
+
+/* Video pause → audio nyala */
+vid.addEventListener("pause", ()=>{
+    if(audioUnlocked){
         bgm.play().catch(()=>{});
     }
 });
 
-/* ===== VIDEO AUTO-PAUSE ===== */
+/* Video selesai → audio nyala */
+vid.addEventListener("ended", ()=>{
+    if(audioUnlocked){
+        bgm.play().catch(()=>{});
+    }
+});
+
+/* Scroll bebas → audio tetap nyala (jika video tidak play) */
+window.addEventListener("scroll", ()=>{
+    if(audioUnlocked && vid.paused && bgm.paused){
+        bgm.play().catch(()=>{});
+    }
+});
+
+/* Keluar website / tab mati */
+document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden){
+        bgm.pause();
+    }
+});
+window.addEventListener("pagehide", ()=>bgm.pause());
+window.addEventListener("beforeunload", ()=>bgm.pause());
+
+/* ===== VIDEO AUTO-PAUSE (TETAP) ===== */
 let initialVideoScroll = 0;
 let videoScrollStarted = false;
 
@@ -153,15 +172,14 @@ vid.addEventListener("play", ()=>{
 
 window.addEventListener("scroll", ()=>{
     if(videoScrollStarted && !vid.paused){
-        let scrolled = Math.abs(window.scrollY - initialVideoScroll);
-        if(scrolled >= 5){
+        if(Math.abs(window.scrollY - initialVideoScroll) >= 5){
             vid.pause();
             videoScrollStarted = false;
         }
     }
 });
 
-/* ===== COPY NOMOR ===== */
+/* ===== COPY TEXT ===== */
 function copyText(nomor){
     navigator.clipboard.writeText(nomor);
     alert("Nomor berhasil disalin ✅");
@@ -170,4 +188,3 @@ function copyText(nomor){
 
 </body>
 </html>
-
